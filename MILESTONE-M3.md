@@ -26,3 +26,7 @@ Inventory file is craeted at the root location of the repository.
 [![Intel Demo](./static/Intel_M2_demo.png)](https://drive.google.com/file/d/1o2w0zNTCrzZYrTynKwT823wmWi3IahaS/view?usp=sharing "Intel Demo")<br/>
 #### Screencast for M1
 [![Screencast for M1]]()
+
+
+#### Screencast for demo buil-green strategy
+[![](./static/strategy_demo.png)](https://drive.google.com/file/d/1ZpETBf-NLtZIBU_p0goBzxt_ql5S5pon/view?usp=sharing)
