@@ -84,11 +84,11 @@ PROVISION_PRIVATE_PATH=
 - chromium installation getting stuck on VM.Upgraded the memory size to 5MB.
   - **Solution**: Upgraded the memory size to 5MB. 
 
-## [Checkpoint M1 Report](https://github.ncsu.edu/CSC-DevOps-S22/DEVOPS-17/blob/main/CHECKPOINT-M1.md)
+## [Checkpoint M1 Report](CHECKPOINT-M1.md)
 This checkpoint report includes the tasks we have completed along with the team contributions, the issues we have faced while implementing or completing tasks, and what work remains after this checkpoint. There will also be a screenshot of the Github Project at the time this Checkpoint document was created and the Screencasts for this checkpoint.
 
-## [Milestone 2 Report](https://github.ncsu.edu/CSC-DevOps-S22/DEVOPS-17/blob/main/MILESTONE-M2.md)
+## [Milestone 2 Report](MILESTONE-M2.md)
 This milestone report includes the tasks we have completed along with the team contributions, the issues we have faced while implementing or completing tasks along with their resolutions and the learnings got from them. There will also be a screenshot of the Github Project Board at the time this Milestone document was documented and the screencast as a demo for this milestone. The link for snapshots of 1000 iteration of mutation is also provided there.
 
-## [Milestone 3 Report](https://github.ncsu.edu/CSC-DevOps-S22/DEVOPS-17/blob/main/MILESTONE-M3.md)
+## [Milestone 3 Report](MILESTONE-M3.md)
 This milestone report includes the tasks we have completed along with the team contributions, the issues we have faced while implementing or completing tasks along with their resolutions and the learnings got from them. There will also be a screenshot of the Github Project Board at the time this Milestone document was documented and the screencast as a demo for this milestone.
