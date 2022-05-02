@@ -1,12 +1,7 @@
 require('dotenv').config()
 const chalk = require('chalk');
-const axios = require("axios");
-const fs = require('fs');
-const path = require('path');
 const vmProvider = require("../lib/vmProvider");
 const bakerxProvider = require("../lib/bakerxProvider");
-const execProvider = require('../lib/exec/ExecProvider');
-const { env } = require('process');
 const droplet = require("../lib/droplet")
 const { serverNames } = require("../lib/blueGreenStrategy")
 

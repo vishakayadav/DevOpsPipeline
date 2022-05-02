@@ -8,7 +8,7 @@ const build = require('./build');
 const bakerxProvider = require("../lib/bakerxProvider");
 const vmProvider = require("../lib/vmProvider");
 const ymlExec = require('../lib/yamlExecutor');
-const {serverNames, run} = require("../lib/blueGreenStrategy");
+const {serverNames, run, is_working} = require("../lib/blueGreenStrategy");
 const { env } = require('process');
 exports.command = 'deploy <inventory_path> <job_name> <buildFile_path>';
 exports.desc = 'Trigger a deploy job, running steps outlined by build.yml, wait for output, and print build log.';
@@ -68,23 +68,29 @@ exports.handler = async argv => {
     let steps = currentJob.steps;
     let cleanup_steps = currentJob.cleanup || [];
 
-    for (let server in serverNames) {
-        let sshCmd = sshConfig(serverNames[server]);
+    try {
+        for (let server in serverNames) {
+            let sshCmd = sshConfig(serverNames[server]);
 
-        ymlExec.initialize(provider, sshCmd, envParams);
+            ymlExec.initialize(provider, sshCmd, envParams);
 
-        await ymlExec.runSetup(doc.setup)
-        console.log( chalk.yellowBright( `\nINSTALLATION COMPLETE ON ${server} server` ))
-        try {
-            console.log( chalk.yellowBright( `\nRUN DEPLOY STEPS ON ${server} server` ))
-            await ymlExec.runDeploySteps(steps, serverNames[server]);
-        } catch (error) {
-            console.log( chalk.red (`Error ${error}`))
+            await ymlExec.runSetup(doc.setup)
+            console.log( chalk.yellowBright( `\nINSTALLATION COMPLETE ON ${server} server` ))
+            try {
+                console.log( chalk.yellowBright( `\nRUN DEPLOY STEPS ON ${server} server` ))
+                await ymlExec.runDeploySteps(steps, serverNames[server]);
+            } catch (error) {
+                console.log( chalk.red (`Error ${error}`))
+            }
+            ymlExec.cleanUp(cleanup_steps);
+            if (server == 'GREEN' && ! await is_working(serverNames[server]['HOSTIP'])) {
+                return;
+            }
         }
-        ymlExec.cleanUp(cleanup_steps);
+        await run()
+    } catch (error) {
+        console.log( chalk.yellowBright (`Error ${error}`))
     }
-
-    await run()
 
     function askBuild(ques) {
         const rl = readline.createInterface({
