@@ -52,6 +52,31 @@ jobs:
     cleanup:
       - name: remove iTrust2-v10 repo
         cmd: rm -rf iTrust2-v10
+  - name: linkding-build
+    steps:
+      - name: clone latest version of linkding
+        cmd: git clone https://github.com/sissbruecker/linkding.git
+      - name: create and activate virutal environment for python3
+        cmd: cd linkding && python3 -m venv venv && source venv/bin/activate
+      - name: install requirements to virtual environment
+        cmd: pip3 install -r requirements.txt
+      - name: install and run node server
+        cmd: npm i && npm run build
+      - name: make directory for database
+        cmd: mkdir -p data
+      - name: run migration
+        cmd: python manage.py migrate
+      - name: export django superuser creds
+        cmd: export DJANGO_SUPERUSER_EMAIL=vyadav@ncsu.edu && export DJANGO_SUPERUSER_USERNAME=vyadav && export DJANGO_SUPERUSER_PASSWORD=root@root
+      - name: create superuser for application
+        cmd: python manage.py createsuperuser --noinput
+      - name: collect static files
+        cmd: python manage.py collectstatic
+      - name: start django application
+        cmd: python manage.py runserver 9090
+    cleanup:
+      - name: remove linkding repo
+        cmd: rm -rf linkding
   - name: mutation-coverage
     steps:
       - name: install browser for puppeteer
