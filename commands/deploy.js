@@ -8,7 +8,7 @@ const build = require('./build');
 const bakerxProvider = require("../lib/bakerxProvider");
 const vmProvider = require("../lib/vmProvider");
 const ymlExec = require('../lib/yamlExecutor');
-const {serverNames, run_proxy} = require("../lib/blueGreenStrategy");
+const {serverNames, run_proxy, is_working} = require("../lib/blueGreenStrategy");
 const { env } = require('process');
 exports.command = 'deploy <inventory_path> <job_name> <buildFile_path>';
 exports.desc = 'Trigger a deploy job, running steps outlined by build.yml, wait for output, and print build log.';
@@ -96,6 +96,9 @@ exports.handler = async argv => {
                 console.log( chalk.red (`Error ${error}`))
             }
             ymlExec.cleanUp(cleanup_steps);
+            if(server == 'GREEN' && !await is_working(serverNames[server]['HOSTIP'], serverPort, heathcheckEndPoint)){
+                return;
+            }
         }
         await run_proxy(proxyServer, proxyPort, serverPort, heathcheckEndPoint);
 
