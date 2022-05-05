@@ -89,6 +89,8 @@ jobs:
             dest: ~/linkding.tar.gz
       - name: unzip linkding.tar.gz
         cmd: rm -rf linkding && tar -xf linkding.tar.gz
+      - name: change owner of the repo to root
+        cmd: chown -R root:root linkding
       - name: shutdown the server 
         cmd: pid=$(lsof -i:8082 -Fp | head -n 1 | sed 's/^p//') && if [[ pid -ne '' ]];then kill $pid;fi
       - name: create and activate virutal environment for python3

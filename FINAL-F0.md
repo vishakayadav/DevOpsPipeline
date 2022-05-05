@@ -39,7 +39,7 @@ Notice that we need to run `code-coverage` before running `deploy` because the d
 
 After running the command above, we can click the following links to check if the servers start successfully.
 + [Spring Petclinic](http://localhost:3091/)
-+ [Linkding](http://localhost:3092/)
++ [Linkding](http://localhost:3092/login)
 
 ## Changes Made in already developed commands:
 In the already developed feature, only develop command included some changes.
@@ -65,3 +65,6 @@ In the already developed feature, only develop command included some changes.
     proxyport: <port on which you want to proxy for blue green deployment strategy>
 ```
 Here, any path mentioned(except for desc under scp) is relative path from root this repo, i.e., DEVOPS-17.
+
+### Demo Screencast for F0
+[![Intel Demo](./static/Intel_M2_demo.png)](https://drive.google.com/file/d/1Wboz1b6R8dRB5VBAivuAWhWNP7STTR_U/view?usp=sharing)

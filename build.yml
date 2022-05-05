@@ -102,7 +102,7 @@ jobs:
   - name: deploy-iTrusts
     covfile: ./codeCoverage/iTrust2.cov
     zipfile: compressedFiles/iTrust2-10.jar
-    mincov: 70
+    mincov: 85
     port: 8080
     healthcheck: /iTrust2/login
     steps:

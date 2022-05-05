@@ -4,6 +4,11 @@ node_modules/
 .ssh
 package-lock.json
 *.log
+*.cov
+*.tar.gz
+*.jar
+*.csv
+*.html
 config-srv
 config-srv.pub
 screenshots/
