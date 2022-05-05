@@ -19,9 +19,15 @@
 ** Droplets information is stored at DEVOPS-17/inventory.txt. It is created after execution of `prod up`.
 
 * Values of [job-name] are as follows:
-  * `itrust-build` for running iTrust2
+  * `itrust-build` for building iTrust2
+  * `petclinic-build` for building petclinic
+  * `linkding-build` for building linkdeing
   * `mutation-coverage` for running mutation coverage
+  * `petclinic-code-coverage` for generating code coverage of petclinic
+  * `linkding-code-coverage` for generating the code coverage of linkding
   * `deploy-iTrusts` for deploying iTrust2
+  * `deploy-petclinic` for deploying spring-petclinic
+  * `deploy-linkding` for deploying linkding
 
 ** We use the Blue-green deployment as out deployment strategy.
 ## Description for `.env` file
@@ -83,6 +89,9 @@ PROVISION_PRIVATE_PATH=
   - **Solution**: explicitly updated the max buffer size of child_process to 2 MB. 
 - chromium installation getting stuck on VM.Upgraded the memory size to 5MB.
   - **Solution**: Upgraded the memory size to 5MB. 
+
+## [Final F0 Report](FINAL-F0.md)
+This report includes the information about the feature developed for our pipeline for finals. It also includes information about the changes done in already developed feature in order to streamline the entire process of pipeline. There will also be a screencast as a demo for this.
 
 ## [Checkpoint M1 Report](CHECKPOINT-M1.md)
 This checkpoint report includes the tasks we have completed along with the team contributions, the issues we have faced while implementing or completing tasks, and what work remains after this checkpoint. There will also be a screenshot of the Github Project at the time this Checkpoint document was created and the Screencasts for this checkpoint.

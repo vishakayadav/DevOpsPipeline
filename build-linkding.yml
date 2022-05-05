@@ -1,0 +1,114 @@
+setup: 
+  - name: synchronize system time
+    cmd: sudo systemctl restart systemd-timesyncd.service
+  - name: update apt
+    cmd: sudo apt update
+  - name: remove flash-kernel
+    cmd: sudo apt remove -y flash-kernel && sudo apt -y autoremove
+  - name: install python dependencies
+    cmd: sudo apt install python3-dev python3-pip python3-venv python3-wheel -y
+  - name: install supervisor
+    cmd: sudo apt install supervisor -y
+  - name: install debconf-utils
+    cmd: sudo apt install -y debconf-utils -qq
+  - name: set DEBIAN_FRONTEND as "noninteractive"
+    cmd: export DEBIAN_FRONTEND="noninteractive"
+  - name: set mysql root password
+    cmd: echo "mysql-server mysql-server/root_password password {MYSQL_PSSW}" | sudo debconf-set-selections
+  - name: set mysql root password again
+    cmd: echo "mysql-server mysql-server/root_password_again password {MYSQL_PSSW}" | sudo debconf-set-selections
+  - name: install mysql 8
+    cmd: sudo apt install -y mysql-server -qq
+  - name: install git
+    cmd: sudo apt install -y git -qq
+  - name: get dependencies for nodejs
+    cmd: curl -fsSL https://deb.nodesource.com/setup_16.x | sudo bash -
+  - name: install nodejs and npm
+    cmd: sudo apt install -y nodejs -qq
+  - name: install uuid for pm2
+    cmd: sudo npm install uuid@latest -g
+  - name: instal pm2
+    cmd: sudo npm install pm2 -g
+  - name: install yargs for npm
+    cmd: npm install yargs
+  - name: stop apt-daily timer to look for updates
+    cmd: sudo systemctl stop apt-daily.timer
+
+jobs:
+  - name: linkding-build
+    steps:
+      - name: clone latest version of linkding
+        cmd: git clone https://github.com/sissbruecker/linkding.git
+      - name: package linkding
+        cmd: sudo tar -cf linkding.tar.gz linkding/
+      - name: move package to shared volume
+        cmd: mv linkding.tar.gz ~/{VOLUME}/compressedFiles/linkding.tar.gz
+    cleanup:
+      - name: remove linkding repo
+        cmd: rm -rf linkding
+  - name: linkding-code-coverage
+    steps:
+      - name: clone latest version of linkding
+        cmd: git clone https://github.com/sissbruecker/linkding.git
+      - name: create and activate virutal environment for python3
+        cmd: cd linkding && python3 -m venv venv && source venv/bin/activate
+      - name: install requirements to virtual environment
+        cmd: cd linkding && source venv/bin/activate && pip install wheel && pip3 install -r requirements.txt
+      - name: install and run node server
+        cmd: cd linkding && npm i && npm run build
+      - name: make directory for database
+        cmd: cd linkding && mkdir -p data
+      - name: run migration
+        cmd: cd linkding && source venv/bin/activate && python manage.py migrate
+      # - name: create superuser for application
+      #   cmd: cd linkding && source venv/bin/activate && source ~/{VOLUME}/.env && export $(cut -d= -f1 ~/{VOLUME}/.env) && python manage.py createsuperuser --noinput
+      - name: collect static files
+        cmd: cd linkding && source venv/bin/activate && python manage.py collectstatic
+      - name: generate code coverage
+        cmd: cd linkding && source venv/bin/activate && coverage run manage.py test && coverage report
+      - name: save coverage report to a file.
+        cmd: cd linkding && source venv/bin/activate && coverage report > report.csv
+      - name: parse report to store the final percentage in linkding.cov
+        cmd: awk 'END {print}' linkding/report.csv | grep -o '...$' > ~/{VOLUME}/codeCoverage/linkding.cov
+      - name: mv report to shared volume
+        cmd: mv ~/linkding/report.csv ~/{VOLUME}/codeCoverage/linkding-report.csv
+    cleanup:
+      - name: remove linkding repo
+        cmd: rm -rf linkding
+  - name: deploy-linkding
+    covfile: ./codeCoverage/linkding.cov
+    zipfile: ./compressedFiles/linkding.tar.gz
+    mincov: 85
+    port: 8082
+    healthcheck: /login
+    steps:
+      - name: move the project to the remote server
+        scp:
+          params:
+            src: ./compressedFiles/linkding.tar.gz
+            dest: ~/linkding.tar.gz
+      - name: unzip linkding.tar.gz
+        cmd: rm -rf linkding && tar -xf linkding.tar.gz
+      - name: shutdown the server 
+        cmd: pid=$(lsof -i:8082 -Fp | head -n 1 | sed 's/^p//') && if [[ pid -ne '' ]];then kill $pid;fi
+      - name: create and activate virutal environment for python3
+        cmd: cd linkding && python3 -m venv venv && source venv/bin/activate
+      - name: install requirements to virtual environment
+        cmd: cd linkding && pip install wheel django-debug-toolbar && pip3 install -Ur requirements.txt
+      - name: remove all web from pm2
+        cmd: pm2 kill
+      - name: install dependencies and run npm server
+        cmd: cd linkding && npm i && npm run build
+      - name: make directory for database
+        cmd: cd linkding && mkdir -p data
+      - name: run migration
+        cmd: cd linkding && python3 manage.py migrate
+      # - name: create superuser for application
+      #   cmd: cd linkding && source venv/bin/activate && source ~/{VOLUME}/.env && python manage.py createsuperuser --noinput
+      - name: collect static files
+        cmd: cd linkding && python3 manage.py collectstatic
+      - name: start django application
+        cmd: nohup python3 linkding/manage.py runserver 0.0.0.0:8082 &> linkding-server.log &
+    proxyport: 3092
+    
+

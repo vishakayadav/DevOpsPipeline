@@ -6,7 +6,7 @@ setup:
   - name: remove flash-kernel
     cmd: sudo apt remove -y flash-kernel && sudo apt -y autoremove
   - name: install java 11
-    cmd: sudo apt install -y openjdk-11-jre-headless -qq
+    cmd: sudo apt install -y openjdk-11-jre-headless openjdk-11-jdk-headless -qq
   - name: install debconf-utils
     cmd: sudo apt install -y debconf-utils -qq
   - name: set DEBIAN_FRONTEND as "noninteractive"
@@ -46,37 +46,31 @@ jobs:
       - name: Run iTrust2
         cmd: cd iTrust2-v10/iTrust2 && mvn --batch-mode --update-snapshots clean test
       - name: package iTrust2
-        cmd: cd iTrust2-v10/iTrust2 && mvn clean package -Dmaven.test.skip=true
+        cmd: cd ~/iTrust2-v10/iTrust2 && mvn clean package -Dmaven.test.skip=true
       - name: move iTrust2 jar file
-        cmd: cp iTrust2-v10/iTrust2/target/iTrust2-10.jar {VOLUME}/
+        cmd: cp ~/iTrust2-v10/iTrust2/target/iTrust2-10.jar ~/{VOLUME}/compressedFiles/
     cleanup:
       - name: remove iTrust2-v10 repo
         cmd: rm -rf iTrust2-v10
-  - name: linkding-build
+  - name: iTrust2-code-coverage
     steps:
-      - name: clone latest version of linkding
-        cmd: git clone https://github.com/sissbruecker/linkding.git
-      - name: create and activate virutal environment for python3
-        cmd: cd linkding && python3 -m venv venv && source venv/bin/activate
-      - name: install requirements to virtual environment
-        cmd: pip3 install -r requirements.txt
-      - name: install and run node server
-        cmd: npm i && npm run build
-      - name: make directory for database
-        cmd: mkdir -p data
-      - name: run migration
-        cmd: python manage.py migrate
-      - name: export django superuser creds
-        cmd: export DJANGO_SUPERUSER_EMAIL=vyadav@ncsu.edu && export DJANGO_SUPERUSER_USERNAME=vyadav && export DJANGO_SUPERUSER_PASSWORD=root@root
-      - name: create superuser for application
-        cmd: python manage.py createsuperuser --noinput
-      - name: collect static files
-        cmd: python manage.py collectstatic
-      - name: start django application
-        cmd: python manage.py runserver 9090
+      - name: clone latest version of iTrust2
+        cmd: git clone https://{GIT_USER}:{TOKEN}@github.ncsu.edu/engr-csc326-staff/iTrust2-v10.git
+      - name: copy  application.yml.template to application.yml
+        cmd: cp iTrust2-v10/iTrust2/src/main/resources/application.yml.template iTrust2-v10/iTrust2/src/main/resources/application.yml
+      - name: update password in application.yml
+        cmd: sed -i 's/password:/password:\ {MYSQL_PSSW}/' iTrust2-v10/iTrust2/src/main/resources/application.yml
+      - name: generate code coverage
+        cmd: cd ~/iTrust2-v10/iTrust2 && mvn clean package test
+      - name: move report to shared volume
+        cmd: cp -R ~/iTrust2-v10/iTrust2/target/site/jacoco-ut/ ~/{VOLUME}/codeCoverage/iTrust2-report
+      - name: install dependencies - pup to parse html and store the code coverage percentage
+        cmd: sudo apt install golang-go && go get github.com/ericchiang/pup && sudo cp go/bin/pup /usr/bin
+      - name: parse index.html and store the code coverage in iTrust2.cov
+        cmd: cat ~/iTrust2-v10/iTrust2/target/site/jacoco-ut/index.html | pup 'tfoot tr td:nth-child(3) text{}' > ~/{VOLUME}/codeCoverage/iTrust2.cov
     cleanup:
-      - name: remove linkding repo
-        cmd: rm -rf linkding
+      - name: remove iTrust2-v10 repo
+        cmd: rm -rf iTrust2-v10
   - name: mutation-coverage
     steps:
       - name: install browser for puppeteer
@@ -106,13 +100,20 @@ jobs:
       - name: remove microservice repo
         cmd: rm -rf checkbox.io-micro-preview
   - name: deploy-iTrusts
+    covfile: ./codeCoverage/iTrust2.cov
+    zipfile: compressedFiles/iTrust2-10.jar
+    mincov: 70
+    port: 8080
+    healthcheck: /iTrust2/login
     steps:
       - name: move the project to the remote server
         scp:
           params:
-            src: ./iTrust2-10.jar
+            src: ./compressedFiles/iTrust2-10.jar
             dest: ~/iTrust2-10.jar
       - name: shutdown the server 
-        cmd: sudo killall -9 'java' || true
+        cmd: pid=$(ps aux | grep '[s]erver.port=8080' | awk '{print $2}') && if [[ pid -ne '' ]];then kill $pid;fi
       - name: start the iTrust2 server 1
-        cmd: nohup java -jar ~/iTrust2-10.jar --server.port=8080  &> server.log &
+        cmd: nohup java -jar ~/iTrust2-10.jar --server.port=8080  &> iTrust-server.log &
+    proxyport: 3090
+
