@@ -1,4 +1,8 @@
 # Pipeline Project - DevOps-17
+## Overview
+Built the pipeline using Jenkins to automate build, test coverage, deployment, and monitoring stages
+Achieved zero downtime and rollback capabilities
+Generalized the pipeline to support applications from various tech stacks
 
 ## Instructions to Run the Project
 - clone the repo `git clone https://github.ncsu.edu/CSC-DevOps-S22/DEVOPS-17.git`
